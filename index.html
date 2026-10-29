@@ -1,0 +1,269 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>피싱 메시지 위험 분석 체험실</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 30px 16px;
+  font-family: Arial, sans-serif;
+  background: #0b1220;
+  color: #f1f5f9;
+}
+.container { max-width: 850px; margin: auto; }
+header { text-align: center; margin-bottom: 30px; }
+header h1 { color: #55e6c1; }
+header p { color: #a8b8ce; }
+.card {
+  background: #172338;
+  border: 1px solid #30415a;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 20px;
+}
+h2 { font-size: 20px; margin-top: 0; }
+textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #40536b;
+  background: #0b1220;
+  color: white;
+  font-size: 15px;
+  resize: vertical;
+}
+button {
+  padding: 11px 14px;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  font-weight: bold;
+  margin: 6px 4px 0 0;
+}
+.primary { background: #55e6c1; color: #0b1220; }
+.example { background: #2b3c54; color: white; }
+button:hover { opacity: 0.85; }
+#result { display: none; }
+#score { font-size: 42px; font-weight: bold; }
+#status { font-weight: bold; }
+li { margin: 8px 0; }
+.note { color: #ffd166; font-size: 13px; }
+footer { text-align: center; color: #8fa1b8; font-size: 12px; }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+  <h1>🛡️ 피싱 메시지 위험 분석 체험실</h1>
+  <p>AI와 사이버 보안 기술을 이해하는 교육용 웹페이지</p>
+</header>
+
+<section class="card">
+  <h2>📩 메시지 분석하기</h2>
+  <p>분석할 문자 메시지를 입력하거나 예시를 선택하세요.</p>
+
+  <textarea id="message"
+    placeholder="분석할 메시지를 입력하세요."></textarea>
+
+  <div>
+    <button class="example" onclick="loadExample(0)">
+      택배 사칭
+    </button>
+    <button class="example" onclick="loadExample(1)">
+      계정 보안
+    </button>
+    <button class="example" onclick="loadExample(2)">
+      당첨 사칭
+    </button>
+    <button class="example" onclick="loadExample(3)">
+      일반 안내
+    </button>
+  </div>
+
+  <button class="primary" onclick="analyzeMessage()">
+    위험 요소 분석하기
+  </button>
+  <button class="example" onclick="resetPage()">
+    초기화
+  </button>
+</section>
+
+<section class="card" id="result" aria-live="polite">
+  <h2>🔍 분석 결과</h2>
+  <div id="score"></div>
+  <div id="status"></div>
+  <p id="summary"></p>
+
+  <h3>감지된 위험 요소</h3>
+  <ul id="reasons"></ul>
+
+  <h3>안전하게 대응하는 방법</h3>
+  <ul>
+    <li>출처가 불분명한 링크는 누르지 않습니다.</li>
+    <li>비밀번호나 인증번호를 입력하지 않습니다.</li>
+    <li>기관의 공식 앱이나 공식 연락처로 확인합니다.</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2>💡 피싱 예방 수칙</h2>
+  <ul>
+    <li>긴급한 행동을 요구하는 메시지를 주의합니다.</li>
+    <li>당첨이나 보상을 이유로 돈을 요구하면 의심합니다.</li>
+    <li>메시지에 포함된 링크의 주소를 확인합니다.</li>
+    <li>의심스러운 메시지는 공식 경로를 통해 확인합니다.</li>
+  </ul>
+</section>
+
+<footer>
+  <p>CYBER LAB | 사이버 보안 진로 융합 프로젝트</p>
+  <p class="note">
+    이 웹페이지는 규칙 기반 교육용 시제품이며,
+    실제 AI 모델을 이용한 피싱 판별 시스템은 아닙니다.
+  </p>
+</footer>
+
+</div>
+
+<script>
+const examples = [
+  "[택배 안내] 주소 오류로 배송이 보류되었습니다. 오늘 안에 아래 링크에서 주소를 수정하세요: http://parcel-check.example",
+  "[계정 보안팀] 계정이 정지될 예정입니다. 지금 비밀번호와 인증번호를 입력해 본인 확인을 완료하세요.",
+  "축하합니다! 이벤트에 당첨되었습니다. 상품 수령을 위해 수수료를 송금하고 계좌 정보를 입력하세요.",
+  "안녕하세요. 내일 동아리 모임은 오후 3시에 시작합니다. 장소는 지난번과 같은 정보실입니다."
+];
+
+function loadExample(index) {
+  document.getElementById("message").value = examples[index];
+}
+
+function analyzeMessage() {
+  const message = document.getElementById("message").value.trim();
+
+  if (!message) {
+    alert("먼저 분석할 메시지를 입력하세요.");
+    return;
+  }
+
+  const rules = [
+    {
+      name: "긴급한 행동 요구",
+      pattern: /긴급|즉시|지금 바로|오늘 안에|곧 정지|당장|정지될 예정/i,
+      points: 2,
+      reason: "시간 압박을 주어 판단을 서두르게 할 수 있습니다."
+    },
+    {
+      name: "개인정보 또는 인증정보 요구",
+      pattern: /비밀번호|인증번호|주민등록번호|카드번호|계좌 정보|개인정보|본인 확인/i,
+      points: 3,
+      reason: "민감한 정보를 요구하는 표현이 포함되어 있습니다."
+    },
+    {
+      name: "인터넷 링크 포함",
+      pattern: /https?:\/\/|www\./i,
+      points: 2,
+      reason: "링크의 목적지를 확인하기 전에는 열지 않는 것이 안전합니다."
+    },
+    {
+      name: "금전 요구",
+      pattern: /송금|입금|수수료|결제|상품권|계좌 이체/i,
+      points: 3,
+      reason: "돈이나 결제를 요구하는 표현이 있습니다."
+    },
+    {
+      name: "당첨 또는 보상으로 유인",
+      pattern: /당첨|무료 경품|보상금|상품 수령|축하합니다|상금/i,
+      points: 2,
+      reason: "보상이나 당첨을 내세워 정보를 요구할 수 있습니다."
+    },
+    {
+      name: "기관 사칭 가능성",
+      pattern: /택배|은행|고객센터|보안팀|경찰|검찰/i,
+      points: 1,
+      reason: "기관 이름만으로 메시지의 진위를 확인할 수 없습니다."
+    }
+  ];
+
+  let score = 0;
+  const detected = [];
+
+  rules.forEach(rule => {
+    if (rule.pattern.test(message)) {
+      score += rule.points;
+      detected.push(rule);
+    }
+  });
+
+  score = Math.min(score, 10);
+
+  let status, color, summary;
+
+  if (score >= 7) {
+    status = "위험도 높음";
+    color = "#ff647c";
+    summary = "여러 위험 신호가 감지되었습니다. 링크를 누르거나 개인정보를 입력하지 마세요.";
+  } else if (score >= 4) {
+    status = "주의 필요";
+    color = "#ffd166";
+    summary = "의심스러운 표현이 있습니다. 발신자와 요청 내용을 별도로 확인하세요.";
+  } else if (score >= 1) {
+    status = "일부 위험 신호 감지";
+    color = "#7cb8ff";
+    summary = "주의할 표현이 발견되었습니다. 메시지 내용을 신중하게 확인하세요.";
+  } else {
+    status = "뚜렷한 위험 신호 없음";
+    color = "#55e6c1";
+    summary = "등록된 규칙에서 위험 신호를 찾지 못했습니다. 안전한 메시지라는 뜻은 아닙니다.";
+  }
+
+  document.getElementById("result").style.display = "block";
+
+  const scoreElement = document.getElementById("score");
+  scoreElement.textContent = score + " / 10점";
+  scoreElement.style.color = color;
+
+  const statusElement = document.getElementById("status");
+  statusElement.textContent = status;
+  statusElement.style.color = color;
+
+  document.getElementById("summary").textContent = summary;
+
+  const reasons = document.getElementById("reasons");
+  reasons.innerHTML = "";
+
+  if (detected.length === 0) {
+    const item = document.createElement("li");
+    item.textContent =
+      "등록된 규칙에서 위험 신호를 찾지 못했습니다. 새로운 유형의 피싱은 감지하지 못할 수 있습니다.";
+    reasons.appendChild(item);
+  } else {
+    detected.forEach(rule => {
+      const item = document.createElement("li");
+      const title = document.createElement("strong");
+      title.textContent = rule.name + " — ";
+      item.appendChild(title);
+      item.appendChild(document.createTextNode(rule.reason));
+      reasons.appendChild(item);
+    });
+  }
+
+  document.getElementById("result").scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+}
+
+function resetPage() {
+  document.getElementById("message").value = "";
+  document.getElementById("result").style.display = "none";
+}
+</script>
+</body>
+</html>
